@@ -273,8 +273,8 @@
             }
 
             // Check if Google Client ID is still the placeholder
-            if (GOOGLE_CLIENT_ID === '897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com') {
-                console.error("ERROR: Google Client ID is still the placeholder. Please replace '897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com' with your actual Client ID from Google Cloud Console.");
+            if (GOOGLE_CLIENT_ID === 'YOUR_ACTUAL_GOOGLE_CLIENT_ID_HERE') {
+                console.error("ERROR: Google Client ID is still the placeholder. Please replace 'YOUR_ACTUAL_GOOGLE_CLIENT_ID_HERE' with your actual Client ID from Google Cloud Console.");
                 authMessage.textContent = "Configuration Error: Google Sign-In Client ID is missing. Please check console for instructions.";
                 // Hide the sign-in button if misconfigured
                 document.querySelector('.g_id_signin').style.display = 'none';
@@ -316,8 +316,8 @@
             
             try {
                 let data = [];
-                if (currentGoogleAppsScriptUrl.includes('https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec') || currentGoogleAppsScriptUrl === '') {
-                    console.warn("Using mock data. Please replace 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec' with your actual Google Apps Script Web App URL.");
+                if (currentGoogleAppsScriptUrl.includes('YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') || currentGoogleAppsScriptUrl === '') {
+                    console.warn("Using mock data. Please replace 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' with your actual Google Apps Script Web App URL.");
                     data = mockData;
                 } else {
                     const response = await fetch(currentGoogleAppsScriptUrl);
