@@ -1,35 +1,45 @@
-const CACHE_NAME = "sheet-viewer-cache-v1";
-const urlsToCache = [
-  "/",
-  "/index.html",
-  "/manifest.json"
-];
+const CACHE_NAME = 'sheet-viewer-cache-v1';
+const OFFLINE_URL = '/offline.html';
 
-// Install Service Worker
-self.addEventListener("install", event => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.json',
+        OFFLINE_URL
+      ])
+    )
   );
+  self.skipWaiting();
 });
 
-// Activate Service Worker
-self.addEventListener("activate", event => {
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      );
-    })
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      )
+    )
   );
+  self.clients.claim();
 });
 
-// Fetch Requests
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
+self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(response =>
+        response || fetch(event.request)
+      )
+    );
+  }
 });
