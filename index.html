@@ -128,7 +128,7 @@
     <div class="auth-section" id="authSection">
         <p id="authMessage">Please sign in with your Google organizational account to view the data.</p>
         <div id="g_id_onload"
-             data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
+             data-client_id="897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false">
         </div>
@@ -193,7 +193,7 @@
         // This is for Google Sign-In, NOT your Apps Script.
         // Go to Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> OAuth client ID -> Web application.
         // Add your Vercel/GitHub Pages URL as an Authorized JavaScript origin.
-        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE'; 
+        const GOOGLE_CLIENT_ID = '897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com'; 
 
         // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL.
         // This URL should be obtained after deploying your Apps Script as a Web App
@@ -272,11 +272,15 @@
                     });
             }
 
-            // Check if user was previously signed in (e.g., from sessionStorage)
-            // For this example, we'll rely on the GSI library's auto-login if configured,
-            // or require explicit sign-in. If you want persistent login across browser closes,
-            // you'd typically store the token securely and validate it.
-            
+            // Check if Google Client ID is still the placeholder
+            if (GOOGLE_CLIENT_ID === '897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com') {
+                console.error("ERROR: Google Client ID is still the placeholder. Please replace '897565146789-v31lkcru5irj0hap3hsb4qnjh3c5dtee.apps.googleusercontent.com' with your actual Client ID from Google Cloud Console.");
+                authMessage.textContent = "Configuration Error: Google Sign-In Client ID is missing. Please check console for instructions.";
+                // Hide the sign-in button if misconfigured
+                document.querySelector('.g_id_signin').style.display = 'none';
+                return; // Stop further execution if client ID is missing
+            }
+
             // Initial UI update
             updateUI();
 
