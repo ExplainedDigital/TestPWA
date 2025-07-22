@@ -140,7 +140,7 @@
             // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL.
             // This URL should be obtained after deploying your Apps Script as a Web App
             // with "Execute as: User accessing the web app" and "Who has access: Anyone in the organization".
-            const googleAppsScriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; 
+            const googleAppsScriptUrl = 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec'; 
             
             // Mock data for demonstration purposes if URL is not set or for local testing
             // This will only be used if googleAppsScriptUrl is the placeholder or empty.
@@ -154,8 +154,10 @@
 
             try {
                 let data = [];
-                if (googleAppsScriptUrl === 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec' || googleAppsScriptUrl === '') {
-                    console.warn("Using mock data. Please replace 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' with your actual Google Apps Script Web App URL.");
+                // Check if the placeholder URL is still present. If so, use mock data.
+                // Otherwise, attempt to fetch from the provided URL.
+                if (googleAppsScriptUrl.includes('https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec')) {
+                    console.warn("Using mock data. Please replace 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec' with your actual Google Apps Script Web App URL.");
                     data = mockData;
                 } else {
                     const response = await fetch(googleAppsScriptUrl);
