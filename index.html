@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First PWA</title>
+    <title>My First PWA with Sign-In</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Link to the Web App Manifest (now a separate file) -->
     <link rel="manifest" href="/manifest.json">
     <!-- Theme color for the browser UI -->
@@ -52,6 +54,7 @@
             max-width: 90%;
             width: 800px; /* Wider for table */
             overflow-x: auto; /* Enable horizontal scrolling for small screens */
+            display: none; /* Hidden by default, shown after login */
         }
         table {
             width: 100%;
@@ -84,20 +87,70 @@
             margin-top: 1rem;
             font-weight: bold;
         }
+        .auth-section {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .user-info {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: #444;
+        }
+        .signout-button {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #ef4444; /* Red for sign out */
+            color: white;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .signout-button:hover {
+            background-color: #dc2626;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Hello PWA!</h1>
-        <p>This is your first Progressive Web App.</p>
-        <p>You can install it to your home screen on supported devices.</p>
+        <h1>My PWA</h1>
+        <p>This app displays data from a Google Sheet.</p>
     </div>
 
-    <div class="data-table-container">
+    <div class="auth-section" id="authSection">
+        <p id="authMessage">Please sign in with your Google organizational account to view the data.</p>
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-logo_alignment="left">
+        </div>
+        <div id="signedInInfo" class="user-info hidden">
+            <p>Welcome, <span id="userName"></span>!</p>
+            <button id="signOutButton" class="signout-button">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="data-table-container" id="dataTableContainer">
         <h2 class="text-xl font-bold mb-4 text-center">Google Sheet Data</h2>
         <p class="loading-message" id="loadingMessage">Loading data...</p>
         <p class="error-message hidden" id="errorMessage"></p>
-        <table id="dataTable" class="hidden">
+        <table id="dataTable">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -125,8 +178,122 @@
             });
         }
 
+        // --- Google Sign-In and Data Fetching Logic ---
+        let userIsAuthenticated = false;
+        let userData = null; // To store user email, name etc.
+
+        const authSection = document.getElementById('authSection');
+        const authMessage = document.getElementById('authMessage');
+        const signedInInfo = document.getElementById('signedInInfo');
+        const userNameSpan = document.getElementById('userName');
+        const signOutButton = document.getElementById('signOutButton');
+        const dataTableContainer = document.getElementById('dataTableContainer');
+
+        // IMPORTANT: Replace this with your Google Client ID from Google Cloud Console
+        // This is for Google Sign-In, NOT your Apps Script.
+        // Go to Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> OAuth client ID -> Web application.
+        // Add your Vercel/GitHub Pages URL as an Authorized JavaScript origin.
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE'; 
+
+        // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL.
+        // This URL should be obtained after deploying your Apps Script as a Web App
+        // with "Execute as: User accessing the web app" and "Who has access: Anyone in the organization".
+        const googleAppsScriptUrl = 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec'; 
+        
+        // Mock data for demonstration purposes if URLs are not set or for local testing
+        const mockData = [
+            { Name: 'Mock Alice', ID: 'M001', Place: 'Mock City' },
+            { Name: 'Mock Bob', ID: 'M002', Place: 'Mock Town' }
+        ];
+
+        // Function called by Google Sign-In when a credential response is received
+        async function handleCredentialResponse(response) {
+            if (response.credential) {
+                // Decode the JWT to get user information
+                const profile = JSON.parse(atob(response.credential.split('.')[1]));
+                userData = profile;
+                userIsAuthenticated = true;
+                
+                console.log('User signed in:', userData.email);
+                updateUI();
+                await fetchData(); // Fetch data after successful sign-in
+            } else {
+                console.error('Sign-in failed:', response);
+                authMessage.textContent = 'Sign-in failed. Please try again.';
+                userIsAuthenticated = false;
+                userData = null;
+                updateUI();
+            }
+        }
+
+        // Update UI based on authentication status
+        function updateUI() {
+            if (userIsAuthenticated && userData) {
+                authSection.classList.add('hidden');
+                signedInInfo.classList.remove('hidden');
+                userNameSpan.textContent = userData.name || userData.email;
+                dataTableContainer.style.display = 'block'; // Show the data table
+            } else {
+                authSection.classList.remove('hidden');
+                signedInInfo.classList.add('hidden');
+                dataTableContainer.style.display = 'none'; // Hide the data table
+                authMessage.textContent = 'Please sign in with your Google organizational account to view the data.';
+            }
+        }
+
+        // Handle Sign Out
+        function handleSignOut() {
+            google.accounts.id.disableAutoSelect(); // Prevent automatic re-login
+            google.accounts.id.revoke(userData.email, done => {
+                console.log('User signed out:', done);
+                userIsAuthenticated = false;
+                userData = null;
+                // Clear any stored session data if you were using it
+                sessionStorage.removeItem('googleUser'); 
+                updateUI();
+                // Clear table data
+                document.getElementById('dataTable').querySelector('tbody').innerHTML = '';
+            });
+        }
+
+        // Attach sign out listener
+        signOutButton.addEventListener('click', handleSignOut);
+
+        // Initialize Google Sign-In (this runs after the GSI script loads)
+        window.onload = function () {
+            // Service worker registration
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            }
+
+            // Check if user was previously signed in (e.g., from sessionStorage)
+            // For this example, we'll rely on the GSI library's auto-login if configured,
+            // or require explicit sign-in. If you want persistent login across browser closes,
+            // you'd typically store the token securely and validate it.
+            
+            // Initial UI update
+            updateUI();
+
+            // If a user is already signed in (e.g., via GSI's auto-select or previous session),
+            // handleCredentialResponse will be called automatically.
+            // If not, the sign-in button will be visible.
+        };
+
         // Function to fetch data from Google Apps Script Web App
         async function fetchData() {
+            if (!userIsAuthenticated) {
+                console.warn("User not authenticated. Cannot fetch data.");
+                document.getElementById('errorMessage').textContent = 'Please sign in to view the data.';
+                document.getElementById('errorMessage').classList.remove('hidden');
+                return;
+            }
+
             const loadingMessage = document.getElementById('loadingMessage');
             const errorMessage = document.getElementById('errorMessage');
             const dataTable = document.getElementById('dataTable');
@@ -134,33 +301,22 @@
 
             loadingMessage.classList.remove('hidden');
             errorMessage.classList.add('hidden');
-            dataTable.classList.add('hidden');
+            // dataTable.classList.add('hidden'); // Keep table visible but clear content
             tableBody.innerHTML = ''; // Clear existing data
 
             // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL.
             // This URL should be obtained after deploying your Apps Script as a Web App
             // with "Execute as: User accessing the web app" and "Who has access: Anyone in the organization".
-            const googleAppsScriptUrl = 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec'; 
+            // If you are using the placeholder, it will use mock data.
+            const currentGoogleAppsScriptUrl = googleAppsScriptUrl; 
             
-            // Mock data for demonstration purposes if URL is not set or for local testing
-            // This will only be used if googleAppsScriptUrl is the placeholder or empty.
-            const mockData = [
-                { Name: 'Alice', ID: 'A001', Place: 'New York' },
-                { Name: 'Bob', ID: 'B002', Place: 'London' },
-                { Name: 'Charlie', ID: 'C003', Place: 'Paris' },
-                { Name: 'Diana', ID: 'D004', Place: 'Tokyo' },
-                { Name: 'Eve', ID: 'E005', Place: 'Sydney' }
-            ];
-
             try {
                 let data = [];
-                // Check if the placeholder URL is still present. If so, use mock data.
-                // Otherwise, attempt to fetch from the provided URL.
-                if (googleAppsScriptUrl.includes('https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec')) {
+                if (currentGoogleAppsScriptUrl.includes('https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec') || currentGoogleAppsScriptUrl === '') {
                     console.warn("Using mock data. Please replace 'https://script.google.com/a/macros/explaineddigital.com/s/AKfycbw7bQz_h6V2GNDYgGfBLIkEyLrt59nnvha-DEiUfIG2oqO6CDb_VNTKwjcnbUrG47oL/exec' with your actual Google Apps Script Web App URL.");
                     data = mockData;
                 } else {
-                    const response = await fetch(googleAppsScriptUrl);
+                    const response = await fetch(currentGoogleAppsScriptUrl);
                     if (!response.ok) {
                         // If the user is not logged in or not part of the organization,
                         // the fetch will likely result in a redirect or a 401/403 error.
@@ -194,9 +350,6 @@
                 loadingMessage.classList.add('hidden');
             }
         }
-
-        // Fetch data when the page loads
-        window.addEventListener('load', fetchData);
     </script>
 </body>
 </html>
