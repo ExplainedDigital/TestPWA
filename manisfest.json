@@ -1,7 +1,7 @@
 {
-  "name": "Google Sheets Viewer",
-  "short_name": "SheetsApp",
-  "description": "View data from your private Google Sheet",
+  "name": "Private Sheet Viewer",
+  "short_name": "SheetViewer",
+  "description": "View your private Google Sheet after sign-in.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f0f4f8",
